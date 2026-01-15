@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(cargo:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Bash(make:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(chmod:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "Bash(cd:*)",
+      "Bash(pwd:*)",
+      "Bash(echo:*)",
+      "Bash(test:*)",
+      "Bash(./scripts/*)"
+    ],
+    "deny": []
+  },
+  "model": "claude-sonnet-4-20250514"
+}
