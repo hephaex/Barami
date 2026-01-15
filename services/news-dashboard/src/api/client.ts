@@ -3,8 +3,8 @@ import type {
   NewsArticle,
   PaginatedResponse,
   Stats,
-  DailyStats,
-  Category,
+  DailyStatsResponse,
+  CategoriesResponse,
   NewsFilters,
 } from '@/types';
 
@@ -25,31 +25,29 @@ api.interceptors.response.use(
 
 export const newsApi = {
   getStats: async (): Promise<Stats> => {
-    const { data } = await api.get('/news/stats');
+    const { data } = await api.get('/stats');
     return data;
   },
 
-  getDailyStats: async (days: number = 30): Promise<DailyStats[]> => {
-    const { data } = await api.get('/news/stats/daily', {
+  getDailyStats: async (days: number = 30): Promise<DailyStatsResponse> => {
+    const { data } = await api.get('/stats/daily', {
       params: { days },
     });
     return data;
   },
 
-  getCategories: async (): Promise<Category[]> => {
-    const { data } = await api.get('/news/categories');
+  getCategories: async (): Promise<CategoriesResponse> => {
+    const { data } = await api.get('/categories');
     return data;
   },
 
   getNews: async (filters: NewsFilters = {}): Promise<PaginatedResponse<NewsArticle>> => {
     const { data } = await api.get('/news', {
       params: {
-        search: filters.search,
+        q: filters.search,
         category: filters.category,
-        start_date: filters.start_date,
-        end_date: filters.end_date,
         page: filters.page || 1,
-        size: filters.size || 20,
+        limit: filters.size || 20,
       },
     });
     return data;
@@ -61,10 +59,10 @@ export const newsApi = {
   },
 
   getRecentNews: async (limit: number = 10): Promise<NewsArticle[]> => {
-    const { data } = await api.get('/news/recent', {
-      params: { limit },
+    const { data } = await api.get('/news', {
+      params: { limit, page: 1 },
     });
-    return data;
+    return data.articles || [];
   },
 };
 

@@ -22,6 +22,11 @@ const Home = () => {
     queryFn: () => newsApi.getRecentNews(10),
   });
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: newsApi.getCategories,
+  });
+
   if (statsLoading || dailyLoading || newsLoading) {
     return <Loading />;
   }
@@ -45,7 +50,7 @@ const Home = () => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Today's Articles"
-          value={stats?.today_count || 0}
+          value={stats?.total_crawled_today || 0}
           color="blue"
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +65,7 @@ const Home = () => {
         />
         <StatsCard
           title="Total Articles"
-          value={stats?.total_articles.toLocaleString() || 0}
+          value={stats?.total_articles.toLocaleString() || '0'}
           color="green"
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +80,7 @@ const Home = () => {
         />
         <StatsCard
           title="Success Rate"
-          value={`${stats?.success_rate.toFixed(1) || 0}%`}
+          value={`${(stats?.success_rate || 0).toFixed(1)}%`}
           color="purple"
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +95,7 @@ const Home = () => {
         />
         <StatsCard
           title="Categories"
-          value={stats?.categories_count || 0}
+          value={categories?.total || 0}
           color="orange"
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +116,13 @@ const Home = () => {
           <p className="text-sm text-gray-500 mt-1">Daily news collection over the last 30 days</p>
         </div>
         <div className="h-80">
-          {dailyStats && <DailyChart data={dailyStats} type="area" />}
+          {dailyStats?.stats && dailyStats.stats.length > 0 ? (
+            <DailyChart data={dailyStats.stats} type="area" />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No data available for the selected period
+            </div>
+          )}
         </div>
       </div>
 
@@ -126,9 +137,15 @@ const Home = () => {
           </a>
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {recentNews?.map((article) => (
-            <NewsCard key={article.id} article={article} />
-          ))}
+          {recentNews && recentNews.length > 0 ? (
+            recentNews.map((article) => (
+              <NewsCard key={article.id} article={article} />
+            ))
+          ) : (
+            <div className="col-span-2 text-center text-gray-500 py-8">
+              No recent news available
+            </div>
+          )}
         </div>
       </div>
     </div>

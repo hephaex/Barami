@@ -20,7 +20,7 @@ const NewsList = () => {
     size: 20,
   });
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
     queryFn: newsApi.getCategories,
   });
@@ -69,6 +69,7 @@ const NewsList = () => {
   };
 
   const hasActiveFilters = filters.search || filters.category || filters.start_date || filters.end_date;
+  const categories = categoriesData?.categories || [];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -94,7 +95,7 @@ const NewsList = () => {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               >
                 <option value="">All Categories</option>
-                {categories?.map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat.name} value={cat.name}>
                     {cat.name} ({cat.count})
                   </option>
@@ -143,18 +144,18 @@ const NewsList = () => {
         <Loading />
       ) : error ? (
         <ErrorMessage message={error.message} onRetry={refetch} />
-      ) : data && data.items.length > 0 ? (
+      ) : data && data.articles && data.articles.length > 0 ? (
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {data.items.map((article) => (
+            {data.articles.map((article) => (
               <NewsCard key={article.id} article={article} />
             ))}
           </div>
 
-          {data.pages > 1 && (
+          {data.total_pages > 1 && (
             <Pagination
               currentPage={data.page}
-              totalPages={data.pages}
+              totalPages={data.total_pages}
               onPageChange={handlePageChange}
             />
           )}

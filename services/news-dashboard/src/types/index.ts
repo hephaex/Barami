@@ -3,6 +3,7 @@ export interface NewsArticle {
   title: string;
   content: string;
   category: string;
+  author?: string;
   source?: string;
   url?: string;
   published_at: string;
@@ -20,16 +21,13 @@ export interface NewsArticle {
 export interface DailyStats {
   date: string;
   count: number;
-  success_count: number;
-  failure_count: number;
 }
 
 export interface Stats {
-  today_count: number;
   total_articles: number;
+  total_crawled_today: number;
   success_rate: number;
-  categories_count: number;
-  recent_count: number;
+  recent_stats: DailyStats[];
 }
 
 export interface Category {
@@ -37,12 +35,22 @@ export interface Category {
   count: number;
 }
 
+export interface CategoriesResponse {
+  categories: Category[];
+  total: number;
+}
+
+export interface DailyStatsResponse {
+  stats: DailyStats[];
+  total_days: number;
+}
+
 export interface PaginatedResponse<T> {
-  items: T[];
+  articles: T[];
   total: number;
   page: number;
-  size: number;
-  pages: number;
+  limit: number;
+  total_pages: number;
 }
 
 export interface NewsFilters {
