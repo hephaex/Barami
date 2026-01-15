@@ -43,8 +43,8 @@ services:
       - "3001:80"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8800/api}
-      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8800/api/ws}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost/api}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost/api/ws}
     networks:
       - barami-network
     restart: unless-stopped
@@ -72,9 +72,9 @@ services:
       - "3002:80"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8800/api}
-      - VITE_GRAFANA_URL=${VITE_GRAFANA_URL:-http://localhost:8800/grafana}
-      - VITE_PROMETHEUS_URL=${VITE_PROMETHEUS_URL:-http://localhost:8800/prometheus}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost/api}
+      - VITE_GRAFANA_URL=${VITE_GRAFANA_URL:-http://localhost/grafana}
+      - VITE_PROMETHEUS_URL=${VITE_PROMETHEUS_URL:-http://localhost/prometheus}
     networks:
       - barami-network
     restart: unless-stopped
@@ -99,7 +99,7 @@ services:
       dockerfile: Dockerfile
     container_name: barami-nginx
     ports:
-      - "8800:80"
+      - "80:80"
     networks:
       - barami-network
       - baram
