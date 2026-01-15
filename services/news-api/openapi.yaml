@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: Barami News API
+  description: REST API for Barami News Aggregation Platform
+  version: 0.1.0
+  contact:
+    name: Barami Team
+    url: https://github.com/hephaex/Barami
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: http://localhost:8800/api
+    description: Production server (via Nginx)
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: News
+    description: News article endpoints
+  - name: Statistics
+    description: Crawling statistics endpoints
+  - name: Categories
+    description: Category management endpoints
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check the health status of the API and its dependencies
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/news:
+    get:
+      tags:
+        - News
+      summary: List news articles
+      description: Get a paginated list of news articles
+      operationId: listNews
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleListResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/news/search:
+    get:
+      tags:
+        - News
+      summary: Search news articles
+      description: Search for news articles by keyword
+      operationId: searchNews
+      parameters:
+        - name: q
+          in: query
+          description: Search query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleListResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/news/{id}:
+    get:
+      tags:
+        - News
+      summary: Get news article by ID
+      description: Retrieve a specific news article by its ID
+      operationId: getNewsById
+      parameters:
+        - name: id
+          in: path
+          description: Article ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '404':
+          description: Article not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/stats:
+    get:
+      tags:
+        - Statistics
+      summary: Get crawling statistics
+      description: Retrieve overall crawling statistics
+      operationId: getStats
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+
+  /api/stats/daily:
+    get:
+      tags:
+        - Statistics
+      summary: Get daily statistics
+      description: Retrieve daily crawling statistics
+      operationId: getDailyStats
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyStatsResponse'
+
+  /api/categories:
+    get:
+      tags:
+        - Categories
+      summary: List categories
+      description: Get a list of all news categories
+      operationId: listCategories
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded]
+        database:
+          type: string
+          enum: [connected, disconnected]
+        opensearch:
+          type: string
+          enum: [connected, disconnected]
+        timestamp:
+          type: string
+          format: date-time
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        summary:
+          type: string
+        url:
+          type: string
+        source:
+          type: string
+        category:
+          type: string
+        author:
+          type: string
+        image_url:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+        crawled_at:
+          type: string
+          format: date-time
+
+    ArticleListResponse:
+      type: object
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        total:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        limit:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+
+    CrawlStats:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        total_crawled:
+          type: integer
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    StatsResponse:
+      type: object
+      properties:
+        total_articles:
+          type: integer
+          format: int64
+        total_crawled_today:
+          type: integer
+        success_rate:
+          type: number
+          format: double
+        recent_stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/CrawlStats'
+
+    DailyCrawlStats:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total_crawled:
+          type: integer
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+
+    DailyStatsResponse:
+      type: object
+      properties:
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyCrawlStats'
+        total_days:
+          type: integer
+          format: int64
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        article_count:
+          type: integer
+
+    CategoryListResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        total:
+          type: integer
+          format: int64
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        status:
+          type: integer

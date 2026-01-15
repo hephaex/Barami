@@ -26,7 +26,10 @@ logs/
 *.log
 
 # Docker
-docker-compose.override.yml
+# Note: docker-compose.override.yml is now tracked for development
+# Only ignore local overrides
+docker-compose.local.yml
+backups/
 
 # Rust
 **/*.rs.bk

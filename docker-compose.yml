@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # News API Service
+  news-api:
+    build:
+      context: ./services/news-api
+      dockerfile: Dockerfile
+    container_name: barami-news-api
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=8080
+      - POSTGRES_HOST=${POSTGRES_HOST:-baram-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-barami}
+      - POSTGRES_USER=${POSTGRES_USER:-barami}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - OPENSEARCH_HOST=${OPENSEARCH_HOST:-baram-opensearch}
+      - OPENSEARCH_PORT=${OPENSEARCH_PORT:-9200}
+      - OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME:-admin}
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    networks:
+      - barami-network
+      - baram
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # News Dashboard Service
+  news-dashboard:
+    build:
+      context: ./services/news-dashboard
+      dockerfile: Dockerfile
+    container_name: barami-news-dashboard
+    ports:
+      - "3001:80"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8800/api}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8800/api/ws}
+    networks:
+      - barami-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - news-api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Admin Dashboard Service
+  admin-dashboard:
+    build:
+      context: ./services/admin-dashboard
+      dockerfile: Dockerfile
+    container_name: barami-admin-dashboard
+    ports:
+      - "3002:80"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8800/api}
+      - VITE_GRAFANA_URL=${VITE_GRAFANA_URL:-http://localhost:8800/grafana}
+      - VITE_PROMETHEUS_URL=${VITE_PROMETHEUS_URL:-http://localhost:8800/prometheus}
+    networks:
+      - barami-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - news-api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
+    container_name: barami-nginx
+    ports:
+      - "8800:80"
+    networks:
+      - barami-network
+      - baram
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - news-api
+      - news-dashboard
+      - admin-dashboard
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  barami-network:
+    driver: bridge
+    name: barami-network
+  baram:
+    external: true
