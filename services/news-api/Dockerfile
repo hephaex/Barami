@@ -1,6 +1,6 @@
 # Multi-stage build for News API service
 # Stage 1: Builder
-FROM rust:1.75-slim as builder
+FROM rust:latest AS builder
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
