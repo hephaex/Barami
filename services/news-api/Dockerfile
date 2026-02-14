@@ -1,6 +1,6 @@
 # Multi-stage build for News API service
 # Stage 1: Builder
-FROM rust:latest AS builder
+FROM rust:1-bookworm AS builder
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \

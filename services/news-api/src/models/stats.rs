@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct CrawlStats {
@@ -20,16 +21,40 @@ pub struct DailyCrawlStats {
     pub failed_count: i32,
 }
 
+/// Dashboard-compatible stats response
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StatsResponse {
     pub total_articles: i64,
-    pub total_crawled_today: i32,
-    pub success_rate: f64,
-    pub recent_stats: Vec<CrawlStats>,
+    pub today_articles: i64,
+    pub categories: HashMap<String, i64>,
+    pub publishers: HashMap<String, i64>,
+    pub hourly_counts: Vec<HourlyCount>,
+    pub daily_counts: Vec<DailyCount>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HourlyCount {
+    pub hour: String,
+    pub count: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DailyCount {
+    pub date: String,
+    pub count: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DailyStatsResponse {
     pub stats: Vec<DailyCrawlStats>,
     pub total_days: i64,
+}
+
+/// System status response for /api/status
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SystemStatusResponse {
+    pub database: String,
+    pub llm: String,
+    pub disk_usage: f64,
+    pub uptime: i64,
 }

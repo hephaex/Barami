@@ -81,6 +81,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/news/search", get(routes::search_news))
         .route("/api/news/:id", get(routes::get_news_detail))
         .route("/api/stats", get(routes::get_stats))
+        .route("/api/status", get(routes::get_status))
         .route("/api/stats/daily", get(routes::get_daily_stats))
         .route("/api/categories", get(routes::get_categories))
         .layer(cors)

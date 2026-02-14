@@ -2,7 +2,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::models::Article;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 
 #[derive(Clone)]
 pub struct SearchClient {
@@ -49,6 +49,7 @@ impl SearchClient {
         let search_query = json!({
             "from": from,
             "size": size,
+            "track_total_hits": true,
             "query": {
                 "multi_match": {
                     "query": query,
@@ -101,6 +102,7 @@ impl SearchClient {
         let query = json!({
             "from": from,
             "size": size,
+            "track_total_hits": true,
             "query": {
                 "match_all": {}
             },
@@ -175,6 +177,89 @@ impl SearchClient {
         })?;
 
         Ok(get_response.source)
+    }
+
+    /// Get dashboard statistics via OpenSearch aggregations
+    pub async fn get_dashboard_stats(&self) -> ApiResult<Value> {
+        let url = format!("{}/{}/_search", self.base_url, self.index_name);
+
+        let query = json!({
+            "size": 0,
+            "track_total_hits": true,
+            "query": { "match_all": {} },
+            "aggs": {
+                "today_articles": {
+                    "filter": {
+                        "range": {
+                            "crawled_at": {
+                                "gte": "now/d",
+                                "lt": "now+1d/d"
+                            }
+                        }
+                    }
+                },
+                "categories": {
+                    "terms": {
+                        "field": "category",
+                        "size": 50
+                    }
+                },
+                "publishers": {
+                    "terms": {
+                        "field": "publisher",
+                        "size": 50
+                    }
+                },
+                "daily_counts": {
+                    "date_histogram": {
+                        "field": "crawled_at",
+                        "calendar_interval": "day",
+                        "format": "yyyy-MM-dd",
+                        "order": { "_key": "desc" }
+                    }
+                },
+                "hourly_counts": {
+                    "filter": {
+                        "range": {
+                            "crawled_at": {
+                                "gte": "now-24h"
+                            }
+                        }
+                    },
+                    "aggs": {
+                        "hours": {
+                            "date_histogram": {
+                                "field": "crawled_at",
+                                "calendar_interval": "hour",
+                                "format": "HH:mm"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let response = self
+            .client
+            .post(&url)
+            .json(&query)
+            .send()
+            .await
+            .map_err(|e| ApiError::Search(format!("Failed to fetch dashboard stats: {e}")))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let text = response.text().await.unwrap_or_default();
+            return Err(ApiError::Search(format!(
+                "Dashboard stats request failed with status {status}: {text}"
+            )));
+        }
+
+        let body: Value = response.json().await.map_err(|e| {
+            ApiError::Search(format!("Failed to parse dashboard stats: {e}"))
+        })?;
+
+        Ok(body)
     }
 
     /// Health check for OpenSearch
